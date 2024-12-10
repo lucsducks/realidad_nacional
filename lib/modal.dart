@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:realidadnacional/auth_services.dart';
 
-enum FormType { login, register, recover }
+enum FormType { login, register }
 
 void showAuthModal(BuildContext context) {
   showDialog(
     context: context,
+    barrierDismissible: true,
     builder: (BuildContext context) => AuthModal(),
   );
 }
@@ -29,55 +30,95 @@ class _AuthModalState extends State<AuthModal> {
   String _getFormTitle() {
     switch (_formType) {
       case FormType.login:
-        return 'Iniciar Sesión';
+        return 'Bienvenido de nuevo';
       case FormType.register:
-        return 'Registrarse';
-      case FormType.recover:
-        return 'Recuperar Contraseña';
+        return 'Únete a nosotros';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.grey[850],
+      backgroundColor: Colors.grey[900],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Container(
         width: 425,
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               _getFormTitle(),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              _formType == FormType.login
+                  ? 'Ingresa tus credenciales para continuar'
+                  : 'Crea tu cuenta en unos simples pasos',
               style: Theme.of(context)
                   .textTheme
-                  .titleMedium
-                  ?.copyWith(color: Colors.white),
+                  .bodyMedium
+                  ?.copyWith(color: Colors.white70),
+              textAlign: TextAlign.center,
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 24),
             DefaultTabController(
-              length: 3,
+              length: 2,
               child: Column(
                 children: [
-                  TabBar(
-                    onTap: (index) {
-                      setState(() {
-                        _formType = FormType.values[index];
-                      });
-                    },
-                    tabs: [
-                      Tab(text: 'Iniciar Sesión'),
-                      Tab(text: 'Registrarse'),
-                      //Tab(text: 'Recuperar'),
-                    ],
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white60,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[850],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TabBar(
+                      onTap: (index) {
+                        setState(() {
+                          _formType = FormType.values[index];
+                        });
+                      },
+                      indicator: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      tabs: [
+                        Tab(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'Iniciar Sesión',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Tab(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'Registrarse',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white60,
+                    ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 24),
                   [
                     LoginForm(),
                     RegisterForm(),
-                    RecoverForm(),
                   ][_formType.index],
                 ],
               ),
@@ -98,10 +139,11 @@ class LoginForm extends StatefulWidget {
 
 class _LoginFormState extends State<LoginForm> {
   late AuthService _authService;
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String _errorMessage = '';
 
   @override
   void didChangeDependencies() {
@@ -111,74 +153,161 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          controller: _emailController,
-          decoration: InputDecoration(
-            labelText: 'Correo electrónico',
-            hintText: 'correo@ejemplo.com',
-            filled: true,
-            fillColor: Colors.grey[800],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _emailController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingresa tu correo electrónico';
+              }
+              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                  .hasMatch(value)) {
+                return 'Por favor ingresa un correo electrónico válido';
+              }
+              return null;
+            },
+            decoration: InputDecoration(
+              labelText: 'Correo electrónico',
+              hintText: 'correo@ejemplo.com',
+              prefixIcon: Icon(Icons.email_outlined, color: Colors.white70),
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue, width: 2),
+              ),
+              labelStyle: TextStyle(color: Colors.white70),
+              hintStyle: TextStyle(color: Colors.white30),
+              errorStyle: TextStyle(color: Colors.redAccent),
             ),
-            labelStyle: TextStyle(color: Colors.white70),
-            hintStyle: TextStyle(color: Colors.white30),
+            style: TextStyle(color: Colors.white),
           ),
-          style: TextStyle(color: Colors.white),
-        ),
-        SizedBox(height: 16),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: 'Contraseña',
-            filled: true,
-            fillColor: Colors.grey[800],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
+          SizedBox(height: 16),
+          TextFormField(
+            controller: _passwordController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingresa tu contraseña';
+              }
+              if (value.length < 6) {
+                return 'La contraseña debe tener al menos 6 caracteres';
+              }
+              return null;
+            },
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: 'Contraseña',
+              prefixIcon: Icon(Icons.lock_outline, color: Colors.white70),
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue, width: 2),
+              ),
+              labelStyle: TextStyle(color: Colors.white70),
+              errorStyle: TextStyle(color: Colors.redAccent),
             ),
-            labelStyle: TextStyle(color: Colors.white70),
+            style: TextStyle(color: Colors.white),
           ),
-          style: TextStyle(color: Colors.white),
-        ),
-        SizedBox(height: 16),
-        if (_errorMessage.isNotEmpty)
-          Text(
-            _errorMessage,
-            style: TextStyle(color: Colors.red),
+          SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton(
+              onPressed: _isLoading ? null : _login,
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isLoading
+                  ? SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      'Iniciar Sesión',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
           ),
-        SizedBox(height: 16),
-        FilledButton(
-          onPressed: _login,
-          child: Text('Iniciar Sesión'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.lightBlue,
-            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   void _login() async {
-    final result = await _authService.loginUser({
-      'email': _emailController.text,
-      'password': _passwordController.text,
-    });
+    if (!_formKey.currentState!.validate()) return;
 
-    if (result['success']) {
-      Navigator.of(context).pop(); // Close the modal
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Inicio de sesión exitoso')),
-      );
-    } else {
-      setState(() {
-        _errorMessage = result['error'];
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _authService.loginUser({
+        'email': _emailController.text,
+        'password': _passwordController.text,
       });
+
+      if (result['success']) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('¡Bienvenido de nuevo!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    result['error'] ?? 'Ha ocurrido un error al iniciar sesión',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }
@@ -187,13 +316,23 @@ class RegisterForm extends StatefulWidget {
   @override
   _RegisterFormState createState() => _RegisterFormState();
 }
-
 class _RegisterFormState extends State<RegisterForm> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  bool _showPasswordRequirements = false;
+
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String _errorMessage = '';
   late AuthService _authService;
+
+  // Validadores
+  bool _hasMinLength(String value) => value.length >= 6;
+  bool _hasNumber(String value) => value.contains(RegExp(r'[0-9]'));
+  bool _hasSpecialChar(String value) =>
+      value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+  bool _isValidEmail(String value) =>
+      RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value);
 
   @override
   void didChangeDependencies() {
@@ -203,163 +342,260 @@ class _RegisterFormState extends State<RegisterForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          controller: _usernameController,
-          decoration: InputDecoration(
-            labelText: 'Nombre de usuario',
-            filled: true,
-            fillColor: Colors.grey[800],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextFormField(
+            controller: _usernameController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingresa tu nombre de usuario';
+              }
+              return null;
+            },
+            decoration: InputDecoration(
+              labelText: 'Nombre de usuario',
+              prefixIcon: Icon(Icons.person_outline, color: Colors.white70),
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue, width: 2),
+              ),
+              labelStyle: TextStyle(color: Colors.white70),
+              errorStyle: TextStyle(color: Colors.redAccent),
             ),
-            labelStyle: TextStyle(color: Colors.white70),
+            style: TextStyle(color: Colors.white),
           ),
-          style: TextStyle(color: Colors.white),
-        ),
-        SizedBox(height: 16),
-        TextField(
-          controller: _emailController,
-          decoration: InputDecoration(
-            labelText: 'Correo electrónico',
-            hintText: 'correo@ejemplo.com',
-            filled: true,
-            fillColor: Colors.grey[800],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
+          SizedBox(height: 16),
+          TextFormField(
+            controller: _emailController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingresa tu correo electrónico';
+              }
+              if (!_isValidEmail(value)) {
+                return 'Por favor ingresa un correo electrónico válido';
+              }
+              return null;
+            },
+            decoration: InputDecoration(
+              labelText: 'Correo electrónico',
+              hintText: 'correo@ejemplo.com',
+              prefixIcon: Icon(Icons.email_outlined, color: Colors.white70),
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue, width: 2),
+              ),
+              labelStyle: TextStyle(color: Colors.white70),
+              hintStyle: TextStyle(color: Colors.white30),
+              errorStyle: TextStyle(color: Colors.redAccent),
             ),
-            labelStyle: TextStyle(color: Colors.white70),
-            hintStyle: TextStyle(color: Colors.white30),
+            style: TextStyle(color: Colors.white),
           ),
-          style: TextStyle(color: Colors.white),
-        ),
-        SizedBox(height: 16),
-        TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: 'Contraseña',
-            filled: true,
-            fillColor: Colors.grey[800],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
+          SizedBox(height: 16),
+          TextFormField(
+            controller: _passwordController,
+            onChanged: (value) {
+              setState(() {
+                _showPasswordRequirements = value.isNotEmpty;
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingresa una contraseña';
+              }
+              if (!_hasMinLength(value)) {
+                return 'La contraseña debe tener al menos 6 caracteres';
+              }
+              if (!_hasNumber(value)) {
+                return 'La contraseña debe contener al menos un número';
+              }
+              if (!_hasSpecialChar(value)) {
+                return 'La contraseña debe contener al menos un carácter especial';
+              }
+              return null;
+            },
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: 'Contraseña',
+              prefixIcon: Icon(Icons.lock_outline, color: Colors.white70),
+              filled: true,
+              fillColor: Colors.grey[800],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.blue, width: 2),
+              ),
+              labelStyle: TextStyle(color: Colors.white70),
+              errorStyle: TextStyle(color: Colors.redAccent),
             ),
-            labelStyle: TextStyle(color: Colors.white70),
+            style: TextStyle(color: Colors.white),
           ),
-          style: TextStyle(color: Colors.white),
-        ),
-        SizedBox(height: 16),
-        if (_errorMessage.isNotEmpty)
+          if (_showPasswordRequirements) ...[
+            SizedBox(height: 8),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[850],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[700]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'La contraseña debe contener:',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  _buildRequirement(
+                    'Mínimo 6 caracteres',
+                    _hasMinLength(_passwordController.text),
+                  ),
+                  _buildRequirement(
+                    'Al menos un número',
+                    _hasNumber(_passwordController.text),
+                  ),
+                  _buildRequirement(
+                    'Al menos un carácter especial (!@#\$%^&*)',
+                    _hasSpecialChar(_passwordController.text),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton(
+              onPressed: _isLoading ? null : _register,
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isLoading
+                  ? SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+                  : Text(
+                'Registrarse',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequirement(String text, bool isMet) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.circle_outlined,
+            size: 16,
+            color: isMet ? Colors.green : Colors.white54,
+          ),
+          SizedBox(width: 8),
           Text(
-            _errorMessage,
-            style: TextStyle(color: Colors.red),
+            text,
+            style: TextStyle(
+              color: isMet ? Colors.white : Colors.white54,
+              fontSize: 12,
+            ),
           ),
-        SizedBox(height: 16),
-        FilledButton(
-          onPressed: _register,
-          child: Text('Registrarse'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.lightBlue,
-            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   void _register() async {
-    final result = await _authService.registerUser({
-      'fullName': _usernameController.text,
-      'email': _emailController.text,
-      'password': _passwordController.text,
-    });
+    if (!_formKey.currentState!.validate()) return;
 
-    if (result['success']) {
-      Navigator.of(context).pop(); // Close the modal
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registro exitoso')),
-      );
-    } else {
-      setState(() {
-        _errorMessage = result['error'];
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _authService.registerUser({
+        'fullName': _usernameController.text,
+        'email': _emailController.text,
+        'password': _passwordController.text,
       });
-    }
-  }
-}
 
-class RecoverForm extends StatefulWidget {
-  @override
-  _RecoverFormState createState() => _RecoverFormState();
-}
-
-class _RecoverFormState extends State<RecoverForm> {
-  final TextEditingController _emailController = TextEditingController();
-  String _errorMessage = '';
-  late AuthService _authService;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _authService = Provider.of<AuthService>(context, listen: false);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          controller: _emailController,
-          decoration: InputDecoration(
-            labelText: 'Correo electrónico',
-            hintText: 'correo@ejemplo.com',
-            filled: true,
-            fillColor: Colors.grey[800],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
+      if (result['success']) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('¡Cuenta creada exitosamente!'),
+              ],
             ),
-            labelStyle: TextStyle(color: Colors.white70),
-            hintStyle: TextStyle(color: Colors.white30),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          style: TextStyle(color: Colors.white),
-        ),
-        SizedBox(height: 16),
-        if (_errorMessage.isNotEmpty)
-          Text(
-            _errorMessage,
-            style: TextStyle(color: Colors.red),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    result['error'] ?? 'Ha ocurrido un error al crear la cuenta',
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-        SizedBox(height: 16),
-        FilledButton(
-          onPressed: _recoverPassword,
-          child: Text('Recuperar Contraseña'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.lightBlue,
-            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _recoverPassword() async {
-    final result = await _authService.forgotPassword(_emailController.text);
-
-    if (result['success']) {
-      Navigator.of(context).pop(); // Close the modal
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content:
-                Text('Se ha enviado un correo para recuperar tu contraseña')),
-      );
-    } else {
-      setState(() {
-        _errorMessage = result['error'];
-      });
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

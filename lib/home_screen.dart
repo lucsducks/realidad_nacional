@@ -233,7 +233,7 @@ class CustomSliverAppBar extends StatelessWidget {
       automaticallyImplyLeading: false,
       expandedHeight: 50,
       pinned: true,
-      title: const SelectableText(
+      title: const Text(
         'GRUPO 2',
         style: TextStyle(
           color: Colors.white,
@@ -386,179 +386,92 @@ class InfoWeb extends StatelessWidget {
   }
 }
 
-class Nosotros extends StatefulWidget {
+class Nosotros extends StatelessWidget {
   const Nosotros({super.key});
-
-  @override
-  State<Nosotros> createState() => _NosotrosState();
-}
-
-class _NosotrosState extends State<Nosotros>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  final List<Animation<Offset>> _memberAnimations = [];
-  final List<Animation<double>> _opacityAnimations = [];
-  bool isVisible = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    );
-
-    final List<Offset> beginOffsets = [
-      const Offset(0, -1), // Arriba
-      const Offset(1, 0), // Derecha
-      const Offset(0, 1), // Abajo
-      const Offset(-1, 0), // Izquierda
-      const Offset(1, 1), // Diagonal
-      const Offset(-1, 1), // Diagonal
-    ];
-
-    // Crear animaciones para cada miembro
-    for (int i = 0; i < 6; i++) {
-      _memberAnimations.add(
-        Tween<Offset>(
-          begin: beginOffsets[i],
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-            (i * 0.1),
-            1.0,
-            curve: Curves.easeOutBack,
-          ),
-        )),
-      );
-
-      _opacityAnimations.add(
-        Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-            (i * 0.1),
-            1.0,
-            curve: Curves.easeIn,
-          ),
-        )),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final bool isMobile = MediaQuery.of(context).size.width < 600;
 
-    return VisibilityDetector(
-      key: const Key('nosotros-section'),
-      onVisibilityChanged: (visibilityInfo) {
-        var visiblePercentage = visibilityInfo.visibleFraction * 100;
-        if (visiblePercentage > 20) {
-          _controller.forward();
-        } else {
-          _controller.reverse();
-        }
-      },
-      child: Container(
-        padding: EdgeInsets.all(isMobile ? 20 : 40),
-        child: Column(
-          children: [
-            // Título y subtítulo
-            FadeInDown(
-              child: const SelectableText(
-                'Nuestro Equipo',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                ),
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 20 : 40),
+      child: Column(
+        children: [
+          FadeInDown(
+            child: const Text(
+              'Nuestro Equipo',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 40,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 20),
-            FadeIn(
-              child: const SelectableText(
-                'Conoce al equipo detrás de este proyecto',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 18,
-                ),
+          ),
+          const SizedBox(height: 20),
+          FadeIn(
+            child: const Text(
+              'Conoce al equipo detrás de este proyecto',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 18,
               ),
             ),
-            const SizedBox(height: 40),
-            // Primera fila
-            const Wrap(
-              spacing: 60,
-              runSpacing: 20,
-              alignment: WrapAlignment.center,
-              children: [
-                _MemberCard(
-                  name: 'Carbajal Herrera Luis Manuel',
-                  apodo: 'El desausiado',
-                  image: 'luis.jpg',
-                  role: 'Desarrollador',
-                  github: 'github.com/username',
-                  linkedin: 'linkedin.com/in/username',
-                ),
-                _MemberCard(
-                  name: 'Rosas Lucas Fredhy Eduardo',
-                  apodo: 'el jaquer',
-                  image: 'lcuas.png',
-                  role: 'Desarrollador',
-                  github: 'github.com/username',
-                  linkedin: 'linkedin.com/in/username',
-                ),
-                _MemberCard(
-                  name: 'Romero Bardales Leonardo Josue',
-                  apodo: 'Antauro',
-                  image: 'leo.jpeg',
-                  role: 'Desarrollador',
-                  github: 'https://github.com/LeonN534',
-                  linkedin: 'linkedin.com/in/username',
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 40),
+          // Primera fila
+          const Wrap(
+            spacing: 60,
+            runSpacing: 20,
+            alignment: WrapAlignment.center,
+            children: [
+              _MemberCard(
+                name: 'Carbajal Herrera Luis Manuel',
+                image: 'luis.jpg',
+                role: 'Desarrollador',
+                github: 'github.com/username',
+                linkedin: 'linkedin.com/in/username',
+              ),
+              _MemberCard(
+                name: 'Rosas Lucas Fredhy Eduardo',
+                image: 'lcuas.png',
+                role: 'Desarrollador',
+                github: 'github.com/username',
+                linkedin: 'linkedin.com/in/username',
+              ),
+              _MemberCard(
+                name: 'Romero Bardales Leonardo Josue',
+                image: 'leo.jpeg',
+                role: 'Desarrollador',
+                github: 'https://github.com/LeonN534',
+                linkedin: 'linkedin.com/in/username',
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
 
-            const Wrap(
-              spacing: 60,
-              runSpacing: 20,
-              alignment: WrapAlignment.center,
-              children: [
-                _MemberCard(
-                  name: 'Julca Garcia Jhonatan Anibal',
-                  apodo: 'Pisado',
-                  image: 'julca.webp',
-                  role: 'Desarrollador',
-                  github: 'github.com/username',
-                  linkedin: 'linkedin.com/in/username',
-                ),
-                _MemberCard(
-                  name: 'Clauido Montes Kevin',
-                  apodo: 'El jisus',
-                  image: 'kevin.png',
-                  role: 'Desarrollador',
-                  github: 'github.com/username',
-                  linkedin: 'linkedin.com/in/username',
-                ),
-                _MemberCard(
-                  name: 'Kaqui Aquino Angel (No lleva el curso)',
-                  apodo: 'El lolicon',
-                  image: 'kaqui.jpeg',
-                  role: 'Desarrollador',
-                  github: 'github.com/username',
-                  linkedin: 'linkedin.com/in/username',
-                ),
-              ],
-            ),
-          ],
-        ),
+          const Wrap(
+            spacing: 60,
+            runSpacing: 20,
+            alignment: WrapAlignment.center,
+            children: [
+              _MemberCard(
+                name: 'Julca Garcia Jhonatan Anibal',
+                image: 'julca.webp',
+                role: 'Desarrollador',
+                github: 'github.com/username',
+                linkedin: 'linkedin.com/in/username',
+              ),
+              _MemberCard(
+                name: 'Clauido Montes Kevin',
+                image: 'kevin.png',
+                role: 'Desarrollador',
+                github: 'github.com/username',
+                linkedin: 'linkedin.com/in/username',
+              ),
+
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -814,7 +727,6 @@ class _MemberCard extends StatefulWidget {
   final String role;
   final String github;
   final String linkedin;
-  final String apodo;
 
   const _MemberCard({
     required this.name,
@@ -822,7 +734,6 @@ class _MemberCard extends StatefulWidget {
     required this.role,
     required this.github,
     required this.linkedin,
-    required this.apodo,
   });
 
   @override
@@ -839,8 +750,8 @@ class _MemberCardState extends State<_MemberCard> {
       onExit: (_) => setState(() => isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 300,
-        height: 400,
+        width: 250,
+        height: 350,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.1),
@@ -876,7 +787,7 @@ class _MemberCardState extends State<_MemberCard> {
               ),
             ),
             const SizedBox(height: 20),
-            SelectableText(
+            Text(
               widget.name,
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -886,18 +797,7 @@ class _MemberCardState extends State<_MemberCard> {
               ),
             ),
             const SizedBox(height: 5),
-            SelectableText(
-              widget.apodo,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-                fontStyle: FontStyle.italic,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-            const SizedBox(height: 5),
-            SelectableText(
+            Text(
               widget.role,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
@@ -998,7 +898,7 @@ class _TemasState extends State<Temas> with SingleTickerProviderStateMixin {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SelectableText(
+            const Text(
               'Temas de Interés',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -1122,7 +1022,7 @@ class _TemaCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SelectableText(
+                Text(
                   title,
                   style: const TextStyle(
                     color: Colors.white,
@@ -1131,7 +1031,7 @@ class _TemaCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                SelectableText(
+                Text(
                   description,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.8),
@@ -1182,7 +1082,7 @@ class Inicio extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SelectableText(
+                      Text(
                         'Realidad Nacional',
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -1192,7 +1092,7 @@ class Inicio extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 10),
-                      SelectableText(
+                      Text(
                         'Es esta web tocaremos temas de interés nacional, abordaremos sus antecedentes, proyecciones a futuro, impacto en el ámbito nacional y regional y no solamente podrás encontrar información sobre tema, sino que podrás interactuar con otros usuarios y compartir tus opiniones.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -1208,7 +1108,7 @@ class Inicio extends StatelessWidget {
                   height: 300,
                   child: ModelViewer(
                     src: 'https://peruvian-web.vercel.app/archivo.glb',
-                    alt: 'A 3D model of an astronaut',
+                    alt: 'A 3D model peru',
                     ar: true,
                     autoRotateDelay: 10,
                     autoRotate: true,
@@ -1229,7 +1129,7 @@ class Inicio extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SelectableText(
+                      Text(
                         'Realidad Nacional',
                         style: TextStyle(
                           color: Colors.white,
@@ -1237,7 +1137,7 @@ class Inicio extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SelectableText(
+                      Text(
                         'Es esta web tocaremos temas de interés nacional, abordaremos sus antecedentes, proyecciones a futuro, impacto en el ámbito nacional y regional y no solamente podrás encontrar información sobre tema, sino que podrás interactuar con otros usuarios y compartir tus opiniones.',
                         style: TextStyle(
                           color: Colors.white70,
@@ -1252,15 +1152,15 @@ class Inicio extends StatelessWidget {
                   child: Center(
                     child: ModelViewer(
                       src: 'https://peruvian-web.vercel.app/archivo.glb',
-                      alt: 'A 3D model of an astronaut',
+                      alt: 'A 3D model peru',
                       ar: true,
-                      autoRotateDelay: 10,
+                      autoRotateDelay: 43,
                       autoRotate: true,
                       cameraControls: true,
-                      cameraOrbit: '20deg 30deg 4.7m',
+                      cameraOrbit: '5deg 10deg 3.8m',
                       minCameraOrbit: 'auto auto auto',
                       maxCameraOrbit: 'auto auto auto',
-                      interpolationDecay: 100,
+                      interpolationDecay: 250,
                     ),
                   ),
                 ),

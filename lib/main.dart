@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:realidadnacional/router.dart';
 import 'package:realidadnacional/auth_services.dart';
 import 'package:provider/provider.dart';
+import 'package:url_strategy/url_strategy.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setPathUrlStrategy();
 
   final authService = AuthService();
   await authService.initialize();
@@ -24,7 +26,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Realidad racional',
+
+      title: 'Realidad Nacional',
       theme: ThemeData(
         useMaterial3: true,
       ),

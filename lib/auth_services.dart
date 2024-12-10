@@ -16,7 +16,9 @@ class AuthService extends ChangeNotifier {
   String? _userId;
 
   bool get isAuthenticated => _isAuthenticated;
+
   String? get username => _username;
+
   String? get userId => _userId;
 
   Future<void> initialize() async {
@@ -40,7 +42,6 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Guarda únicamente el nombre de usuario en SharedPreferences
   Future<void> _saveUsername(String username) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', username);
@@ -48,7 +49,6 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Elimina el token, el nombre de usuario y el userId de SharedPreferences
   Future<void> _removeToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt');
@@ -61,7 +61,6 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Recupera el token desde SharedPreferences
   Future<String?> getToken() async {
     if (_token != null) return _token;
     final prefs = await SharedPreferences.getInstance();
@@ -73,53 +72,121 @@ class AuthService extends ChangeNotifier {
     return _token;
   }
 
-  /// Registra un nuevo usuario
   Future<Map<String, dynamic>> registerUser(
       Map<String, dynamic> userData) async {
     try {
       final response = await _dio.post('/auth/register', data: userData);
-      if (response.data['token'] != null &&
+
+      if (response.data != null &&
+          response.data['token'] != null &&
           response.data['username'] != null &&
           response.data['userId'] != null) {
         await _saveToken(
-          response.data['token'],
-          response.data['username'],
-          response.data['userId'],
+          response.data['token'].toString(),
+          response.data['username'].toString(),
+          response.data['userId'].toString(),
         );
+
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'La respuesta del servidor no es válida',
+        };
       }
-      return {'success': true, 'data': response.data};
     } on DioError catch (e) {
+      print('DioError en registro: ${e.toString()}');
+      String errorMessage = 'Ocurrió un error al registrar el usuario';
+
+      if (e.response?.data != null) {
+        if (e.response!.data is Map) {
+          // Si la respuesta es un mapa, intentamos obtener el mensaje de error
+          errorMessage = e.response!.data['message']?.toString() ??
+              e.response!.data['error']?.toString() ??
+              errorMessage;
+        } else if (e.response!.data is String) {
+          // Si la respuesta es una cadena, la usamos directamente
+          errorMessage = e.response!.data.toString();
+        }
+      }
+
+      // Manejo de errores específicos comunes
+      if (e.type == DioErrorType.connectionTimeout) {
+        errorMessage =
+            'Tiempo de espera agotado. Por favor, verifica tu conexión';
+      } else if (e.type == DioErrorType.badResponse) {
+        if (e.response?.statusCode == 409) {
+          errorMessage = 'El correo electrónico ya está registrado';
+        } else if (e.response?.statusCode == 400) {
+          errorMessage = 'Datos de registro inválidos';
+        }
+      }
+
       return {
         'success': false,
-        'error':
-            e.response?.data ?? 'Ocurrió un error al registrar el usuario.',
+        'error': errorMessage,
+      };
+    } catch (e) {
+      print('Error general en registro: ${e.toString()}');
+      return {
+        'success': false,
+        'error': 'Ocurrió un error inesperado durante el registro',
       };
     }
   }
 
-  /// Inicia sesión de un usuario existente
   Future<Map<String, dynamic>> loginUser(Map<String, dynamic> userData) async {
     try {
       final response = await _dio.post('/auth/login', data: userData);
-      if (response.data['token'] != null &&
+
+      if (response.data != null &&
+          response.data['token'] != null &&
           response.data['username'] != null &&
           response.data['userId'] != null) {
         await _saveToken(
-          response.data['token'],
-          response.data['username'],
-          response.data['userId'],
+          response.data['token'].toString(),
+          response.data['username'].toString(),
+          response.data['userId'].toString(),
         );
+
+        return {
+          'success': true,
+          'data': response.data,
+        };
+      } else {
+        return {
+          'success': false,
+          'error': 'La respuesta del servidor no es válida',
+        };
       }
-      return {'success': true, 'data': response.data};
     } on DioError catch (e) {
+      String errorMessage = 'Ocurrió un error al iniciar sesión';
+
+      if (e.response?.data != null) {
+        if (e.response!.data is Map) {
+          errorMessage = e.response!.data['message']?.toString() ??
+              e.response!.data['error']?.toString() ??
+              errorMessage;
+        } else if (e.response!.data is String) {
+          errorMessage = e.response!.data.toString();
+        }
+      }
+
       return {
         'success': false,
-        'error': e.response?.data ?? 'Ocurrió un error al iniciar sesión.',
+        'error': errorMessage,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'error': 'Ocurrió un error inesperado',
       };
     }
   }
 
-  /// Envía una solicitud para recuperar la contraseña
   Future<Map<String, dynamic>> forgotPassword(String email) async {
     try {
       final response =
@@ -134,7 +201,6 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Restaura la contraseña utilizando un token
   Future<Map<String, dynamic>> restorePassword(
       String password, String token) async {
     try {
@@ -153,7 +219,6 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Cambia la contraseña del usuario autenticado
   Future<Map<String, dynamic>> changePassword(
       String currentPassword, String newPassword) async {
     try {
